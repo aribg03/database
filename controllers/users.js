@@ -11,7 +11,6 @@ const usersList = async (req=request,res=response)=>{
                 throw new Error(err);
             }
         })
-
         res.json(users);
     }catch (error){
         console.log(error);
@@ -20,4 +19,34 @@ const usersList = async (req=request,res=response)=>{
         if (conn) conn.end();
     }
 }
-module.exports={usersList};   
+const listUserByID = async (req=request,res=response)=>{
+    const {id} = req.params;
+
+    if (isNaN(id)){
+        res.status(400).json({msg:'Invalid ID'});
+        return;
+    }
+    let conn;
+    try{
+        conn = await pool.getConnection();
+        
+        const [user] = await conn.query(usersModel.getByID, [id],(err) => {
+            if (err) {
+                throw new Error(err);
+            }
+        })
+
+        if (!user) {
+            res.status(404).json({msg: 'User not found'});
+            return;
+        }
+
+        res.json(user);
+    }catch (error){
+        console.log(error);
+        res.status(500).json(error);
+    }finally{
+        if (conn) conn.end();
+    }
+}
+module.exports={usersList, listUserByID};   
